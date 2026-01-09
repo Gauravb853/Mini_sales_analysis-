@@ -1,27 +1,108 @@
--- Medium problems (intermediate)
+/* ================= INTERMEDIATE QUERIES ================= */
 
--- 11 SELECT category,sum(price) from products Group by category
+-- Q10. Total price of products per category
+SELECT category, sum(price) 
+FROM products 
+GROUP BY category;
 
--- 12 SELECT count(o.product_id),p.product_name from orders o JOIN products p on o.product_id = p.product_id group by p.product_name
 
--- 13 SELECT sum(p.price),p.product_name from orders o JOIN products p on o.product_id = p.product_id group by p.product_name
+-- Q11. Count how many times each product was ordered
+SELECT count(o.product_id), p.product_name 
+FROM orders o 
+JOIN products p 
+ON o.product_id = p.product_id 
+GROUP BY p.product_name;
 
--- 14 SELECT city, sum(o.quantity*p.price) Revenue FROM customerS c JOIN orders o ON c.customer_id= o.customer_id JOIN products p ON o.product_id= p.product_id GROUP BY city
 
--- 15 SELECT customer_name, sum(o.quantity*p.price) Revenue FROM customerS c JOIN orders o ON c.customer_id= o.customer_id JOIN products p ON o.product_id= p.product_id GROUP BY customer_name
+-- Q12. Total revenue per product
+SELECT sum(p.price), p.product_name 
+FROM orders o 
+JOIN products p 
+ON o.product_id = p.product_id 
+GROUP BY p.product_name;
 
--- 16 SELECT customer_name, count(o.order_id) as 'Order count' FROM customerS c JOIN orders o ON c.customer_id= o.customer_id GROUP BY c.customer_id
 
--- 17 SELECT p.product_name, sum(o.quantity) FROM orders o JOIN products p on o.product_id =p.product_id group by o.product_id,p.product_name Order BY sum(o.quantity) desc Limit 5
+-- Q13. City-wise revenue
+SELECT city, 
+       sum(o.quantity * p.price) Revenue 
+FROM customers c 
+JOIN orders o 
+ON c.customer_id = o.customer_id 
+JOIN products p 
+ON o.product_id = p.product_id 
+GROUP BY city;
 
--- 18 SELECT customer_name, sum(o.quantity*p.price) as ttl FROM orders o JOIN customers c ON o.customer_id= c.customer_id  JOIN products p on o.product_id =p.product_id  Group By o.customer_id Order BY ttl desc Limit 5
 
--- 19 SELECT ROUND(AVG(revenue),1) AOV  FROM (SELECT o.order_id, sum(o.quantity*p.price) revenue FROM orders o JOIN products p ON o.product_id = p.product_id GROUP BY order_id) t
+-- Q14. Customer-wise revenue
+SELECT customer_name, 
+       sum(o.quantity * p.price) Revenue 
+FROM customers c 
+JOIN orders o 
+ON c.customer_id = o.customer_id 
+JOIN products p 
+ON o.product_id = p.product_id 
+GROUP BY customer_name;
 
--- 20 SELECT *, LAG(Revenue) OVER(order by month) AS 'prev_mnth' , Revenue - LAG(Revenue) OVER(order by month) AS Chng_in_sale,
- -- CASE
-  --  WHEN Revenue > LAG(Revenue) OVER (ORDER BY month) THEN 'Increase'
-   -- WHEN Revenue < LAG(Revenue) OVER (ORDER BY month) THEN 'Decrease'
-   -- ELSE 'No change' END AS trend
- -- FROM (SELECT sum(quantity*price) as Revenue, date_format(order_date,'%Y-%m') AS month FROM orders o JOIN products p ON o.product_id= p.product_id GROUP BY date_format(order_date,'%Y-%m')
--- ) t
+
+-- Q15. Order count per customer
+SELECT customer_name, 
+       count(o.order_id) AS 'Order count' 
+FROM customers c 
+JOIN orders o 
+ON c.customer_id = o.customer_id 
+GROUP BY c.customer_id;
+
+
+-- Q16. Top 5 products by quantity sold
+SELECT p.product_name, 
+       sum(o.quantity) 
+FROM orders o 
+JOIN products p 
+ON o.product_id = p.product_id 
+GROUP BY o.product_id, p.product_name 
+ORDER BY sum(o.quantity) DESC 
+LIMIT 5;
+
+
+-- Q17. Top 5 customers by revenue
+SELECT customer_name, 
+       sum(o.quantity * p.price) AS ttl 
+FROM orders o 
+JOIN customers c 
+ON o.customer_id = c.customer_id  
+JOIN products p 
+ON o.product_id = p.product_id  
+GROUP BY o.customer_id 
+ORDER BY ttl DESC 
+LIMIT 5;
+
+
+-- Q18. Average Order Value (AOV)
+SELECT ROUND(AVG(revenue),1) AOV  
+FROM (
+    SELECT o.order_id, 
+           sum(o.quantity * p.price) revenue 
+    FROM orders o 
+    JOIN products p 
+    ON o.product_id = p.product_id 
+    GROUP BY order_id
+) t;
+
+
+-- Q19. Monthly revenue trend with increase/decrease
+SELECT *, 
+       LAG(Revenue) OVER(ORDER BY month) AS 'prev_mnth',
+       Revenue - LAG(Revenue) OVER(ORDER BY month) AS Chng_in_sale,
+       CASE
+           WHEN Revenue > LAG(Revenue) OVER (ORDER BY month) THEN 'Increase'
+           WHEN Revenue < LAG(Revenue) OVER (ORDER BY month) THEN 'Decrease'
+           ELSE 'No change'
+       END AS trend
+FROM (
+    SELECT sum(quantity * price) AS Revenue,
+           date_format(order_date,'%Y-%m') AS month 
+    FROM orders o 
+    JOIN products p 
+    ON o.product_id = p.product_id 
+    GROUP BY date_format(order_date,'%Y-%m')
+) t;
